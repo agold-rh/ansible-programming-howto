@@ -1,0 +1,77 @@
+---
+# README
+# README The current vault test password is "redhat"
+# README
+- hosts: 127.0.0.1
+  connection: local
+  become: no
+  vars_files:
+    - ./vars/main.yml
+    - ./vars/vault.yml
+  tasks:
+    # Create the test tickets
+    - include_role:
+        name: create_demo_tickets  
+      tags:
+        - create_tickets
+
+    # Retrieve and process open tickets
+    # Sets the following facts
+    #   cancel_queue
+    #   active_queue
+    #   active_count 
+    #   success_queue
+    #   failure_queue
+    # Also enables all remediation roles as:
+    #   remediation_string_role_enabled
+    - include_role:
+        name: poll  
+
+    # Sample role dedicated to resolving a single 
+    # complex ticket queue.
+    # 'Complex' in this context means more than 10 or 15 
+    # grouped tasks.
+    - include_role:
+        name: complex
+      when: complex_role_enabled
+
+    ########################################
+    # TODO Add other task queue processing roles here
+    ########################################
+    
+    # Remediate all grouped ticket queues
+    # Process remediated tickets
+    # Enable complex ticket queue processing
+    - include_role:
+        name: grouped
+      when: grouped_role_enabled
+
+    # Stop execution when debugging etc.
+    #- meta: end_play
+
+    # Perform any reporting and notification here
+    # enabled_roles are the roles detected in the ticket fields
+    # remediations_executed are the roles actually executed
+    # set1 - set2 == roles in tickets that don't exist
+    - name: Detect invalid ticket roles
+      set_fact: 
+        invalid_roles: "{{ enabled_roles |difference(remediations_executed) }}"
+
+    # Should be replaced with a robust reporting mechanism or maybe
+    # folded into the 'report' role
+    - name: Alert invalid ticket roles
+      debug:
+        msg: "Invalid roles extracted from tickets {{ invalid_roles }}"
+      when: invalid_roles
+
+    # Currently, a placeholder
+    - include_role:
+        name: report
+      when: active_count > 0
+
+    # Emit summary output that clearly explains what was done
+    - name: Emit result output
+      debug:
+        msg: "TODO Emit the execution results here"
+
+...

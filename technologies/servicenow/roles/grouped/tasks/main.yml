@@ -1,0 +1,21 @@
+---
+# FIXME include_tasks path is bad because of known bug in ansible 2.4.x
+
+- name: Trace ...
+  debug:
+    msg: "{{ active_queue }}"
+
+- name: Extract grouped tickets
+  set_fact:
+    grouped_tickets: "{{ active_queue |selectattr('remediation', 'match', 'grouped') |list }}"
+
+# Until blocks support looping constructs ...
+- name: Remediate grouped tickets
+  include_tasks: roles/grouped/tasks/grouped.yml
+  with_items: "{{ grouped_tickets }}"
+
+
+- name: Mark role as executed
+  set_fact:
+    remediations_executed: "{{ remediations_executed + [ 'grouped' ] }}"
+...

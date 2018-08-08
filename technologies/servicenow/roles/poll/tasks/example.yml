@@ -1,0 +1,84 @@
+---
+# This is an example of using persistent storage 
+# See the lookup_plugins directory for more details
+
+- name: Build a complex fact 1
+  set_fact:
+    data1: { 
+      'simple1' : 'alpha',
+      'simple2' : 'bravo',
+      'simple3' : 'charlie',
+    }
+  tags:
+    - read
+    - write
+
+- name: Make a fact more complex
+  set_fact:
+    data2: "{{ data1 | combine({ 'simple7' : ansible_date_time.epoch }) }}"
+  tags:
+    - read
+    - write
+
+- name: Print out
+  debug:
+    msg: The value of data2 is {{ data2 }}
+  tags:
+    - write
+
+- name: Read postgresql content
+  set_fact:
+    my_fact: > 
+      {{ 
+        lookup(
+          'pglook', 
+          dbname=dbname, 
+          host='127.0.0.1', 
+          user=dbuser, 
+          password=dbpassword,
+          keyname=dbkeyname
+        ) 
+      }}
+  tags:
+    - read
+    - write
+
+- name: Split up read blob
+  set_fact:
+    read_simple1: "{{ my_fact |json_query('simple1') }}"
+    read_simple7: "{{ my_fact |json_query('simple7') }}"
+  tags:
+    - read
+
+- name: Print discrete output
+  debug:
+    msg: The values are {{ read_simple1 }} and {{ read_simple7 }}
+  tags:
+    - read
+
+- name: Print DB Content
+  debug:
+    msg: The item is '{{ item }}'
+  with_items:
+    - "{{ my_fact }}"
+  tags:
+    - read
+
+- name: Write postgresql content
+  debug:
+    msg: > 
+      {{ 
+        lookup(
+          'pglook', 
+          action='WRITE',
+          dbname='persist', 
+          host='127.0.0.1', 
+          user='persist', 
+          password=dbpassword,
+          keyname=dbkeyname,
+          content=data2
+        ) 
+      }}
+  tags:
+    - write
+...

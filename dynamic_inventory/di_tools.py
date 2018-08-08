@@ -125,15 +125,6 @@ class Group(object):
     children.sort()
     return children
 
-#  def hosts_data(self):
-#    '''Return a dict with the host names as keys and the corresponding hostvars as a nested dict
-#    This does not return child group data
-#    '''
-#    data = { }
-#    for h in self.hosts:
-#      data[h.name] = h.data()[h.name]
-#    return data
-
   def as_data(self):
     '''Return the group data as a dict'''
     hosts = list(self.hosts)

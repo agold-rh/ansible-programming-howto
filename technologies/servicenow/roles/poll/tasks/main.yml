@@ -1,0 +1,70 @@
+---
+#
+# TODO enable database storage and usage
+#
+
+# Retrieve the newly created test tickets
+- name: Execute snow_query_tickets
+  snow_query_tickets:
+    minutes: 1440
+    group: "ANSIBLE"
+    host:  "{{ snow_host }}"
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+  no_log: false
+  register: qt_result
+
+- name: Debug output
+  debug: 
+    msg: "{{ qt_result }}"
+
+# Aggregate and winnow tickets
+- name: Process tickets
+  snow_ticket_processor:
+    tickets: "{{ qt_result.meta }}"
+  when: qt_result is defined
+  register: post_process
+
+# Trace execution
+- name: Output processing results
+  debug:
+    msg: "{{ post_process }}"
+
+# Simplify data access
+- name: Truncate data path
+  set_fact:
+    pp_meta: "{{ post_process.meta }}"
+  when: qt_result
+
+# We now know what roles we will use for remediation
+# cancel_queue tickets will be updated to cancelled
+# active_queue tickets will be remediated and updated accordingly
+# success_queue stores active tickets successfully remediated
+# failure_queue stores active tickets unsuccessfully remediated
+- name: Enable roles and create action queues
+  set_fact:
+    success_queue: [ ]
+    failure_queue: [ ]
+    cancel_queue: "{{ pp_meta['cancel'] }}"
+    active_queue: "{{ pp_meta['active'] }}"
+    active_count: "{{ pp_meta['active'] |length }}"
+    enabled_roles: "{{ pp_meta['roles'] }}"
+  when: pp_meta
+
+- name: Close cancelled tickets
+  snow_update_ticket:
+    host: "{{ snow_host }}"
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+    incident: "{{ item.number }}"
+    action: cancel
+    notes: "Ansible cancelation of duplicate ticket"
+    escalation_group: "SERVICE DESK"
+  with_items: "{{ cancel_queue }}"
+  no_log: true
+
+# Exactly like it sounds
+- name: Enable remediation roles
+  set_fact: { "{{ item }}" : True }
+  with_items: "{{ enabled_roles }}"
+...

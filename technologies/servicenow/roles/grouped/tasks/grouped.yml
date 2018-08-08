@@ -1,0 +1,84 @@
+---
+#- name: Output a grouped trace message (ticket number)
+#  debug:
+#    msg: Found ticket number {{ item.number }}
+#
+#- name: Output a grouped trace message (ticket)
+#  debug:
+#    msg: Found ticket {{ item }}
+
+# For real tasks
+# 1) Ignore errors (do not quit on failure)
+# 2) Update ticket to work in progress status (WIP)
+# 3) Add to success_queue or failure_queue as appropriate
+
+- name: Mark ticket as work in progress
+  snow_update_ticket:
+    host: "{{ snow_host }}"
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+    incident: "{{ item.number }}"
+    action: wip
+    notes: "Ansible remediation in progress"
+    escalation_group: "SERVICE DESK"
+  no_log: true
+
+- name: Placeholder for actual remediation
+  debug:
+    msg: Actual remediation is performed here
+
+- name: Close successfully remediated tickets
+  snow_update_ticket:
+    host: "{{ snow_host }}"
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+    incident: "{{ item.number }}"
+    action: resolve
+    notes: "Ansible remediation (grouped) was successful"
+    escalation_group: "SERVICE DESK"
+  when: 
+    - item.number[-1]|int  > 4
+  no_log: true
+
+- name: Put successful remediations in success_queue
+  set_fact:
+    success_queue: "{{ success_queue + [item] }}"
+  when: 
+    - item.number[-1]|int  > 4
+
+#- name: Output a grouped trace message (type failure_queue)
+#  debug:
+#    msg: Type {{ failure_queue }}
+#
+#- name: Output a grouped trace message (type item)
+#  debug:
+#    msg: Type {{ item }}
+#
+#- name: Output a grouped trace message (type [item])
+#  debug:
+#    msg: Type {{ [item] }}
+
+- name: Escalate unsuccessfully remediated tickets
+  snow_update_ticket:
+    host: "{{ snow_host }}"
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+    incident: "{{ item.number }}"
+    action: transfer
+    notes: "Ansible remediation (grouped) was unsuccessful"
+    escalation_group: "SERVICE DESK"
+  when: 
+    - item.number[-1]|int  < 5
+  no_log: true
+
+- name: Put unsuccessful remediations in failure_queue
+  set_fact:
+    failure_queue: "{{ failure_queue + [item] }}"
+  when: 
+    - item.number[-1]|int  < 5
+
+#- name: Output a grouped trace message (failure_queue)
+#  debug:
+#    msg: Found ticket {{ failure_queue }}
+
+...

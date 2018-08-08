@@ -2,9 +2,7 @@
 '''Data sources for dynamic Ansible inventories.
 The only requirement of a new data source is that it must
 implement the get_groups() method. get_groups() must return 
-a list of di_tools.Group objects. The SnowAccess class below
-is a more elaborate example, but the only **requirement** is
-that get_groups() be implemented correctly.
+a list of di_tools.Group objects. 
 Groups may NOT be named "all".
 The "ungrouped" hosts must not be in any other group.
 '''
@@ -79,7 +77,6 @@ class Static(object):
     ungrouped.add_host(host_new)
 
     return [ group_all, group1, group2, group3, ungrouped ]
-
 
 if "__main__" == __name__:
   sys.exit(0)

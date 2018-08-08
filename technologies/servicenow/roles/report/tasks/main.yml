@@ -1,0 +1,6 @@
+---
+# tasks file for report
+- name: Perform any reporting and notification here
+  debug:
+    msg: Placeholder
+...

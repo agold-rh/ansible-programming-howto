@@ -1,1 +1,1 @@
-Sample ansible modules. Drop them into the project or role /library directory and test away.
+Look in ../technologies/servicenow/library for an example of custom ServiceNow related modules.

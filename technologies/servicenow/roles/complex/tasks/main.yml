@@ -1,0 +1,20 @@
+---
+# FIXME include_tasks path is bad because of known bug in ansible 2.4.x
+
+- name: Trace ...
+  debug:
+    msg: "{{ active_queue }}"
+
+- name: Extract complex tickets
+  set_fact:
+    complex_tickets: "{{ active_queue |selectattr('remediation', 'match', 'complex') |list }}"
+
+# Until blocks support looping constructs ...
+- name: Remediate complex tickets
+  include_tasks: roles/complex/tasks/complex.yml
+  with_items: "{{ complex_tickets }}"
+
+- name: Mark role as executed
+  set_fact:
+    remediations_executed: "{{ remediations_executed + [ 'complex' ] }}"
+...

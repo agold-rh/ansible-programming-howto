@@ -1,0 +1,68 @@
+---
+- name: Create first test ticket
+  snow_create_ticket:
+    assigned_to: "Ansible, User"
+    assignment_group: "{{ assignment_group }}"
+    escalation_group: "SERVICE DESK"
+    requestor: "Ansible, User"
+    host:  "{{ snow_host }}"
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+    short_description: "first Ansible demo ticket"
+    remediation: "complex"
+    server: "one.example.com"
+    serviceName: "daytime"
+  no_log: true
+  register: ct_result
+
+#- name: Create first ticket output
+#  debug:
+#    msg: "{{ ct_result }}"
+
+# NOTE
+# This second ticket should cause the first ticket to be 
+# discarded as a duplicate.
+# This ticket should trigger the "complex" role
+
+- name: Create second test ticket
+  snow_create_ticket:
+    assigned_to: "Ansible, User"
+    assignment_group: "{{ assignment_group }}"
+    escalation_group: "SERVICE DESK"
+    requestor: "Ansible, User"
+    host:  "{{ snow_host }}"
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+    short_description: "second Ansible demo ticket"
+    remediation: "complex"
+    server: "one.example.com"
+    serviceName: "daytime"
+  no_log: true
+  register: ct_result
+
+#- name: Create second ticket output
+#  debug:
+#    msg: "{{ ct_result }}"
+
+# This should trigger the general "remediate" role
+- name: Create third test ticket
+  snow_create_ticket:
+    assigned_to: "Ansible, User"
+    assignment_group: "{{ assignment_group }}"
+    escalation_group: "SERVICE DESK"
+    requestor: "Ansible, User"
+    host:  "{{ snow_host }}"
+    user: "{{ snow_user }}"
+    password: "{{ snow_password }}"
+    short_description: "third Ansible demo ticket"
+    remediation: "grouped"
+    server: "two.example.com"
+    serviceName: "nighttime"
+  no_log: true
+  register: ct_result
+
+#- name: Create third ticket output
+#  debug:
+#    msg: "{{ ct_result }}"
+
+...
